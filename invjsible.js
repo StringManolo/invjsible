@@ -740,6 +740,9 @@ module.exports = {
   decode,
   analyze,
   clean,
+  list, // jest only
+  showHelp, // jest only
+  main, // jest only
   encodeToInvisible,
   decodeFromInvisible,
   invisibleChars
