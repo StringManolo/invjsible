@@ -169,7 +169,7 @@ Add invisible watermarks to text:
 
 ```bash
 # Encode watermark data
-echo "Copyright StringManolo 2025" >> copy.txt | invjsible encode copy.txt
+echo "Copyright StringManolo 2025" >> copy.txt && invjsible encode copy.txt
 
 # Append to any file
 cat copy.txt.encoded >> myDocument.txt
