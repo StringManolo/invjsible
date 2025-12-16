@@ -2398,9 +2398,6 @@ describe('invjsible CLI Tool', () => {
     test('should handle platform differences in chmod', async () => {
       const output = path.join(testDir, 'chmod-platform.encoded');
       
-      // Mock process.platform if needed
-      const originalPlatform = process.platform;
-      
       try {
         // Test on non-Windows platform behavior
         if (process.platform !== 'win32') {
@@ -2411,7 +2408,7 @@ describe('invjsible CLI Tool', () => {
         }
         
         fs.unlinkSync(output);
-      } catch (error) {
+      } catch (_error) { // eslint-disable-line no-unused-vars
         // Clean up on error
         if (fs.existsSync(output)) {
           fs.unlinkSync(output);
