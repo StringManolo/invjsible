@@ -12,7 +12,7 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prepare": "husky"
+    "prepare": "npx husky"
   },
   "keywords": [
     "steganography",
