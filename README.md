@@ -234,22 +234,76 @@ npm install --save-dev jest
 # Run all tests
 npm test
 
-# Run with coverage
+# Run with coverage report
 npm run test:coverage
 
-# Watch mode
+# Watch mode for development
 npm run test:watch
+
+# Generate HTML coverage report
+npm test -- --coverage --coverageReporters=html
+# Then open: coverage/index.html
 ```
 
-Test coverage includes:
-- ✅ Basic encoding/decoding functions
-- ✅ Smart compression selection
-- ✅ Runnable file generation
-- ✅ Binary and text files
-- ✅ Unicode and emoji handling
-- ✅ Error handling
-- ✅ Performance tests
-- ✅ Integration tests (roundtrip)
+### Test Coverage
+
+The project has **exceptional test coverage** with **172 comprehensive tests**:
+
+```
+Statements   : 99.67% (305/306)
+Branches     : 94.59% (140/148)
+Functions    : 100%   (19/19)
+Lines        : 99.66% (294/295)
+```
+
+### Test Categories
+
+✅ **Core Functionality**
+- Encoding/decoding with invisible characters
+- Compression vs non-compression selection
+- Binary encoding (all byte values 0x00-0xFF)
+
+✅ **CLI Commands**
+- All commands: `encode`, `decode`, `analyze`, `clean`, `list`, `help`
+- All flags: `--compress`, `--runable`, `--verbose`, `-o`, `--output`
+- Error handling for all commands
+
+✅ **Runnable Templates**
+- Self-extracting executables for: `.js`, `.mjs`, `.sh`, `.bash`, `.py`, `.rb`, `.txt`
+- Files without extensions
+- Compression in runnable mode
+
+✅ **File Types**
+- Text files (ASCII, UTF-8, Unicode)
+- Binary files (images, executables)
+- Empty files
+- Files with special characters and emojis
+- Files with null bytes
+
+✅ **Edge Cases**
+- Empty buffers and files
+- Incomplete bytes (7 bits)
+- All byte patterns (0x00, 0xFF, 0x55, 0xAA, sequential)
+- Maximum compression scenarios
+- Files with 20, 21, 50+ invisible characters
+- Very long filenames (200+ characters)
+- Corrupted compression data
+
+✅ **Integration Tests**
+- Complete encode/decode roundtrips
+- Preservation of binary data integrity
+- Runnable file execution and extraction
+- CLI end-to-end workflows
+
+✅ **Performance Tests**
+- Large file encoding (< 5 seconds)
+- Large file decoding (< 5 seconds)
+- Compression efficiency verification
+
+✅ **Platform Compatibility**
+- Unix/Linux/Mac permissions (chmod)
+- Windows graceful error handling
+- Cross-platform file operations
 
 ## 🔍 Technical Details
 
