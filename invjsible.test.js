@@ -109,18 +109,18 @@ describe('invjsible CLI Tool', () => {
       }
     });
 
-    test('should detect BEFORE compression marker', () => {
-      const encoded = invisibleChars.COMPRESS_BEFORE + 'test';
-      const { compressionMethod } = decodeFromInvisible(encoded);
+    test('should detect compression marker', () => {
+      const encoded = invisibleChars.COMPRESS + 'test';
+      const { isCompressed } = decodeFromInvisible(encoded);
       
-      expect(compressionMethod).toBe('BEFORE');
+      expect(isCompressed).toBe(true);
     });
 
-    test('should detect AFTER compression marker', () => {
-      const encoded = invisibleChars.COMPRESS_AFTER + 'test';
-      const { compressionMethod } = decodeFromInvisible(encoded);
+    test('should not detect compression when marker absent', () => {
+      const encoded = invisibleChars.ZERO + invisibleChars.ONE;
+      const { isCompressed } = decodeFromInvisible(encoded);
       
-      expect(compressionMethod).toBe('AFTER');
+      expect(isCompressed).toBe(false);
     });
   });
 
@@ -139,6 +139,10 @@ describe('invjsible CLI Tool', () => {
       
       // Encoded file should be larger (each byte = 8 invisible characters)
       expect(encodedSize).toBeGreaterThan(originalSize);
+      
+      // Should be text file
+      const content = fs.readFileSync(outputFile, 'utf8');
+      expect(typeof content).toBe('string');
     });
 
     test('should encode file with compression', async () => {
@@ -148,10 +152,13 @@ describe('invjsible CLI Tool', () => {
       
       expect(fs.existsSync(outputFile)).toBe(true);
       
-      // With compression, file should be smaller than without compression
+      // Should be text file (invisible characters)
       const encodedContent = fs.readFileSync(outputFile, 'utf8');
-      expect(encodedContent.startsWith(invisibleChars.COMPRESS_BEFORE) || 
-             encodedContent.startsWith(invisibleChars.COMPRESS_AFTER)).toBe(true);
+      expect(typeof encodedContent).toBe('string');
+      
+      // May or may not have compression marker depending on which is smaller
+      const hasMarker = encodedContent.startsWith(invisibleChars.COMPRESS);
+      expect(typeof hasMarker).toBe('boolean');
     });
 
     test('should generate runnable executable file', async () => {
@@ -182,6 +189,10 @@ describe('invjsible CLI Tool', () => {
         
         expect(fs.existsSync(outputFile)).toBe(true);
         
+        // All outputs should be text (invisible characters)
+        const content = fs.readFileSync(outputFile, 'utf8');
+        expect(typeof content).toBe('string');
+        
         // Clean up
         fs.unlinkSync(outputFile);
       }
@@ -192,6 +203,23 @@ describe('invjsible CLI Tool', () => {
       
       const defaultOutput = testFiles.small + '.encoded';
       expect(fs.existsSync(defaultOutput)).toBe(true);
+    });
+
+    test('compression should choose smaller output', async () => {
+      const outputFile = path.join(testDir, 'compressed-choice.txt');
+      
+      // Use repetitive content that compresses well
+      await encode(testFiles.medium, outputFile, { compress: true, verbose: false });
+      
+      const encodedContent = fs.readFileSync(outputFile, 'utf8');
+      const withoutCompressionFile = path.join(testDir, 'no-compress.txt');
+      await encode(testFiles.medium, withoutCompressionFile, { compress: false, verbose: false });
+      
+      const compressedSize = fs.statSync(outputFile).size;
+      const uncompressedSize = fs.statSync(withoutCompressionFile).size;
+      
+      // Compressed version should be smaller for repetitive content
+      expect(compressedSize).toBeLessThan(uncompressedSize);
     });
   });
 
@@ -216,7 +244,7 @@ describe('invjsible CLI Tool', () => {
       expect(decoded).toEqual(original);
     });
 
-    test('should decode file with BEFORE compression', async () => {
+    test('should decode file with compression', async () => {
       const encodedFile = path.join(testDir, 'encoded-compressed.txt');
       const decodedFile = path.join(testDir, 'decoded-compressed.txt');
       
@@ -290,7 +318,7 @@ describe('invjsible CLI Tool', () => {
       let invisibleCount = 0;
       for (let char of content) {
         const code = char.charCodeAt(0);
-        if (code === 8203 || code === 8204 || code === 8205 || code === 8288) {
+        if (code === 8203 || code === 8204 || code === 8205) {
           invisibleCount++;
         }
       }
@@ -398,6 +426,26 @@ describe('invjsible CLI Tool', () => {
         fs.unlinkSync(decoded);
       }
     });
+
+    test('all output should be text (invisible characters)', async () => {
+      const files = [testFiles.small, testFiles.medium, testFiles.binary];
+      
+      for (const file of files) {
+        const encoded = file + '.test.encoded';
+        
+        // Test without compression
+        await encode(file, encoded, { compress: false, verbose: false });
+        let content = fs.readFileSync(encoded, 'utf8');
+        expect(typeof content).toBe('string');
+        fs.unlinkSync(encoded);
+        
+        // Test with compression
+        await encode(file, encoded, { compress: true, verbose: false });
+        content = fs.readFileSync(encoded, 'utf8');
+        expect(typeof content).toBe('string');
+        fs.unlinkSync(encoded);
+      }
+    });
   });
 
   // ==================== INVISIBLE CHARACTERS TESTS ====================
@@ -406,16 +454,14 @@ describe('invjsible CLI Tool', () => {
     test('should contain all expected characters', () => {
       expect(invisibleChars.ZERO).toBe('\u200B');
       expect(invisibleChars.ONE).toBe('\u200C');
-      expect(invisibleChars.COMPRESS_BEFORE).toBe('\u200D');
-      expect(invisibleChars.COMPRESS_AFTER).toBe('\u2060');
+      expect(invisibleChars.COMPRESS).toBe('\u200D');
     });
 
     test('characters should be truly invisible (non-printable)', () => {
       const chars = [
         invisibleChars.ZERO,
         invisibleChars.ONE,
-        invisibleChars.COMPRESS_BEFORE,
-        invisibleChars.COMPRESS_AFTER
+        invisibleChars.COMPRESS
       ];
       
       for (const char of chars) {

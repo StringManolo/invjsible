@@ -2,7 +2,7 @@
 
 > Encode any file into invisible Unicode characters. Hide data in plain sight.
 
-[![License: GPLV3](https://img.shields.io/badge/License-GPLV3-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPLV3](https://img.shields.io/badge/License-GPLV3-yellow.svg)](https://opensource.org/licenses/GPLV3)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)](https://nodejs.org/)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/stringmanolo/invjsible)
 
@@ -39,7 +39,7 @@ npm link
 # Encode a file in invisible characters
 invjsible encode secret.txt
 
-# Encode a file with compression
+# Encode a file with compression (Recomended to always use)
 invjsible encode secret.txt --compress
 
 # Create a self-extracting executable
@@ -66,7 +66,7 @@ invjsible analyze suspicious.txt
 invjsible encode <file> [options]
 
 Options:
-  --compress        Use Brotli compression (auto-selects best method)
+  --compress        Compare direct vs compressed encoding, use smaller
   --runable         Generate self-extracting executable
   -o, --output      Output file (default: <file>.encoded)
   -v, --verbose     Show detailed information
@@ -183,35 +183,31 @@ cat copy.txt.encoded >> myDocument.txt
 1. **Read File**: Load the original file into memory
 2. **Compress (Optional)**: Apply Brotli compression at maximum level
 3. **Binary Encoding**: Convert each byte to 8-bit binary representation
-4. **Invisible Mapping**: 
+4. **Invisible Mapping**:
    - `0` → Zero-Width Space (`U+200B`)
    - `1` → Zero-Width Non-Joiner (`U+200C`)
-5. **Marker Addition**: Add compression markers if compressed
+5. **Marker Addition**: Add compression marker if compressed
 6. **Save**: Write the invisible character string to file
 
 ### Compression Methods
 
-**Method 1: Compress → Encode**
-- Compress first, then encode
-- Best for most files
+When you use `--compress`, invjsible automatically compares two methods and chooses the smaller result:
+
+**Option 1: Direct Encode**
+- Encode directly without compression
+- Faster encoding
+
+**Option 2: Compress → Encode**
+- Compress first with Brotli, then encode
+- Best for most files, especially repetitive content
 - Marked with Zero-Width Joiner (`U+200D`)
 
-**Method 2: Encode → Compress**
-- Encode first, then compress
-- Best for very repetitive patterns
-- Marked with Word Joiner (`U+2060`)
-
-**Method 3: No Compression**
-- Direct encoding without compression
-- Fastest but largest output
-- No marker
-
-The tool automatically selects the most efficient method when `--compress` is used.
+The tool automatically selects the most efficient method, ensuring you always get the smallest possible output.
 
 ### Decoding Process
 
-1. **Detect Format**: Check for compression markers
-2. **Decompress (if needed)**: Apply decompression based on marker
+1. **Detect Format**: Check for compression marker
+2. **Decompress (if needed)**: Apply decompression if marker is present
 3. **Binary Decoding**: Convert invisible characters back to binary
 4. **Reconstruct**: Rebuild the original file byte by byte
 
@@ -247,7 +243,7 @@ npm run test:watch
 
 Test coverage includes:
 - ✅ Basic encoding/decoding functions
-- ✅ Compression methods (BEFORE/AFTER/NONE)
+- ✅ Smart compression selection
 - ✅ Runnable file generation
 - ✅ Binary and text files
 - ✅ Unicode and emoji handling
@@ -263,13 +259,12 @@ Test coverage includes:
 |-----------|---------|------|-------|
 | Zero-Width Space | U+200B | 8203 | Binary `0` |
 | Zero-Width Non-Joiner | U+200C | 8204 | Binary `1` |
-| Zero-Width Joiner | U+200D | 8205 | Compress BEFORE marker |
-| Word Joiner | U+2060 | 8288 | Compress AFTER marker |
+| Zero-Width Joiner | U+200D | 8205 | Compression marker |
 
 ### File Format
 
 ```
-[Optional: 1-byte compression marker]
+[Optional: 1-byte compression marker (U+200D)]
 [Invisible character string representing binary data]
 ```
 
@@ -299,15 +294,15 @@ const { buffer: decoded } = decodeFromInvisible(invisible);
 console.log(decoded.toString()); // "Hello World"
 
 // Encode a file
-await encode('input.txt', 'output.encoded', { 
-  compress: true, 
+await encode('input.txt', 'output.encoded', {
+  compress: true,
   runable: false,
-  verbose: true 
+  verbose: true
 });
 
 // Decode a file
-await decode('output.encoded', 'output.decoded', { 
-  verbose: true 
+await decode('output.encoded', 'output.decoded', {
+  verbose: true
 });
 ```
 
@@ -323,7 +318,7 @@ For actual security, combine with encryption tools like `gpg`:
 ```bash
 # Encrypt then encode
 gpg --encrypt secret.txt
-invjsible encode secret.txt.gpg 
+invjsible encode secret.txt.gpg
 
 # Decode then decrypt
 invjsible decode secret.txt.gpg.encoded
@@ -332,8 +327,8 @@ gpg --decrypt secret.txt.gpg.decoded
 
 ## Example
 
-> This is an example of hidding a message into a html file and recovering it.  
-  
+> This is an example of hidding a message into a html file and recovering it.
+
 0. Create the html file
 ```bash
 echo '<!DOCTYPE html>
@@ -385,7 +380,6 @@ cat myIndex.html | xxd
 00000170: 2f62 6f64 793e 0a3c 2f68 746d 6c3e 0a    /body>.</html>.
 ```
 
-
 2. Create a hidden message (you can reaname any file to secret.txt)
 ```bash
 echo "I'm a secret message" > secret.txt
@@ -418,7 +412,7 @@ cat index.html | xxd
 00000010: 3c68 746d 6c20 6c61 6e67 3d22 656e 223e  <html lang="en">
 00000020: 0a20 203c 6865 6164 2070 7265 6669 783d  .  <head prefix=
 00000030: 226f 673a 6874 7470 3a2f 2f6f 6770 2e6d  "og:http://ogp.m
-00000040: 652f 6e73 2322 3e0a 2020 3c6d 6574 6120  e/ns#">.  <meta 
+00000040: 652f 6e73 2322 3e0a 2020 3c6d 6574 6120  e/ns#">.  <meta
 00000050: 6368 6172 7365 743d 2275 7466 2d38 223e  charset="utf-8">
 00000060: 0a20 2020 203c 6c69 6e6b 2072 656c 3d22  .    <link rel="
 00000070: 6963 6f6e 2220 6872 6566 3d22 6461 7461  icon" href="data
@@ -427,7 +421,7 @@ cat index.html | xxd
 000000a0: 3e48 656c 6c6f 2057 6f72 6c64 3c2f 7469  >Hello World</ti
 000000b0: 746c 653e 0a3c 2f68 6561 643e 0a3c 626f  tle>.</head>.<bo
 000000c0: 6479 3e3c 212d 2d20 5468 6973 2068 746d  dy><!-- This htm
-000000d0: 6c20 6669 6c65 2063 6f6e 7461 696e 7320  l file contains 
+000000d0: 6c20 6669 6c65 2063 6f6e 7461 696e 7320  l file contains
 000000e0: 6869 6464 656e 2064 6174 6120 2d2d 3e0a  hidden data -->.
 000000f0: 2020 3c64 6976 2069 643d 226d 7941 7070    <div id="myApp
 00000100: 223e 3c2f 6469 763e 0ae2 808b e280 8ce2  "></div>........
@@ -465,9 +459,9 @@ cat index.html | xxd
 00000300: 8b20 203c 7363 7269 7074 3e0a 2020 636f  .  <script>.  co
 00000310: 6e73 7420 6d79 4170 7020 3d20 646f 6375  nst myApp = docu
 00000320: 6d65 6e74 2e71 7565 7279 5365 6c65 6374  ment.querySelect
-00000330: 6f72 2822 236d 7941 7070 2229 3b0a 2020  or("#myApp");.  
+00000330: 6f72 2822 236d 7941 7070 2229 3b0a 2020  or("#myApp");.
 00000340: 6d79 4170 702e 696e 6e65 7254 6578 743d  myApp.innerText=
-00000350: 2248 656c 6c6f 2057 6f72 6c64 2122 0a20  "Hello World!". 
+00000350: 2248 656c 6c6f 2057 6f72 6c64 2122 0a20  "Hello World!".
 00000360: 203c 2f73 6372 6970 743e 0a3c 2f62 6f64   </script>.</bod
 00000370: 793e 0a3c 2f68 746d 6c3e 0a              y>.</html>.
 ```
@@ -475,7 +469,6 @@ cat index.html | xxd
 > Chrome's view-source: cat, curl and other commands will not show the hidden data.
 
 7. To decode, split the index.html in half, get the line with encoded data and decode it
-
 ```bash
 # 1. Get line number 10 directly
 sed -n '10p' index.html > secret.txt.encoded
@@ -506,4 +499,3 @@ This project is licensed under the GPLV3 License - see the [LICENSE](LICENSE) fi
 ## 🌟 Star History
 
 If you find this project useful, please consider giving it a ⭐ on GitHub!
-
