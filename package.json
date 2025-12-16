@@ -1,6 +1,6 @@
 {
   "name": "invjsible",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Encode files into invisible Unicode characters for steganography and data hiding",
   "main": "invjsible.js",
   "bin": {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-       const path = require('path');
+const path = require('path');
 const zlib = require('zlib');
 const { promisify } = require('util');
 
