@@ -21,6 +21,12 @@
 
 ## 📦 Installation
 
+### For users
+```bash
+npm i -g invjsible
+```
+
+### For developers
 ```bash
 # Clone the repository
 git clone https://github.com/stringmanolo/invjsible.git
@@ -36,6 +42,9 @@ npm link
 ## 🚀 Quick Start
 
 ```bash
+# Help menu
+invjsible
+
 # Encode a file in invisible characters
 invjsible encode secret.txt
 
